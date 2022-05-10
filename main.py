@@ -1,64 +1,217 @@
+from ctypes import sizeof
+from distutils.command.clean import clean
+from operator import invert
+from sqlite3 import Row
+from cocol_functions import getCocolTokens
 from nfa import *
 from dfa import *
 from sub import *
-# (a|b)*abb
-exampleNFA = af(["0","1","2","3","4","5","6","7","8","9","10"], ["a","b"], [
-    ["0","E","1"],
-    ["0","E","7"],
-    ["1","E","2"],
-    ["1","E","4"],
-    ["2","a","3"],
-    ["3","E","6"],
-    ["4","b","5"],
-    ["5","E","6"],
-    ["6","E","1"],
-    ["6","E","7"],
-    ["7","a","8"],
-    ["8","b","9"],
-    ["9","b","10"],
-    ["9","E","3"],
-    ], ["0"], ["10"])
+from thombson import *
+import re
 
-string = "babbabb"
+#initial variables
+listCharactersTokens = []
+listRealTokens = []
+validOperators = "|()*+?"
+reservedWords = []
+cocolTokens = getCocolTokens()
+tokensConverted = cocolTokens
+#patron CHR(any number between 1 to 3)
+chrRegex = re.compile(r'(CHR)\(\d{1,3}\)')
 
-result = compile_nfa(exampleNFA,string)
+rangeLetter =re.compile(r"(\w{1})(.*\..*\..*)((\w{1}))")
 
-print('RESULT OF COMPILE NFA')
+# Character range function
+def range_char(start, stop):
+    values=[]
 
-print(result)
+    for n in range(ord(start), ord(stop) + 1):
+        values.append(chr(n))
+    values =  ''.join(values)
 
-exampleDFA = af(["1", "2", "3", "4", "5"], ["a", "b"], [
-    ["1", "a", "2"],
-    ["1", "b", "3"],
-    ["2", "a", "2"],
-    ["2", "b", "4"],
-    ["3", "a", "2"],
-    ["3", "b", "3"],
-    ["4", "a", "2"],
-    ["4", "b", "5"],
-    ["5", "a", "2"],
-    ["5", "b", "3"]
-    ], ["1"], ["5"])
-
-result = compile_dfa(exampleDFA,string)
-
-print('RESULT OF COMPILE DFA')
-print(result)
+    return values
 
 
+def replaceWithAlreadyTokens(listTokens, value):
+    newListTokens = listTokens
+    
+    #prioritaze bigger over smaller ones doing a
+    #  sort of tokens from bigger to smaller len
+    newListTokens.sort(key=lambda x:len(x[0]), reverse=True)
+    
 
-result = subconjuntos(exampleNFA)
-print('RESULT OF CONVERTING NFA TO DFA')
-print('states:')
-print(result.states)
-print('sigma:')
-print(result.sigma)
-print('trans:')
-print(result.trans)
-print('start:')
-print(result.start)
-print('finals:')
-print(result.finals)
+    for token in newListTokens:
+        
+ 
+        position = value.find(token[0])
+
+        if (position != -1):
+            value = value.replace(token[0],('('+token[1]+')'))
 
 
-graph_machine(result, "graph")
+    return value
+
+
+for token in cocolTokens:
+
+    typeToken, tokens = token[0], token[1] 
+
+    if('CHARACTERS' in typeToken):
+
+        for t in tokens:
+
+
+            #only do one max split of = because it could contain that sign inside other parts
+            vocal, value = t.replace(' ', '').split('=', 1)
+
+
+
+            #probably this will fuck up things
+            cleanValue = value.replace("'", "").replace('"', '')[::-1].replace('.'[::-1], '' , 1)[::-1]
+
+            cleanValue = replaceWithAlreadyTokens(listCharactersTokens, cleanValue)
+            
+            #check for characters form
+            chrObject = chrRegex.search(cleanValue)
+            if (chrObject != None):
+                chrForm = chrObject.group(0)
+                chrNumber = int(chrForm.replace('CHR(', '').replace(')', ''))
+
+                #if I find CHR pattern inside I will do the next thing
+                if (chrForm):
+          
+                    value = chr(int(chrNumber))
+                    #position of CHR              
+                    cleanValue = cleanValue.replace(chrForm, chr(chrNumber))
+
+           #check if "A..Z form"
+            rlObject = rangeLetter.search(cleanValue)
+            if (rlObject != None):
+
+               firstLetter = rlObject.group(1)
+               lastLetter = rlObject.group(3)
+               asciiFirstLetter = list(firstLetter.encode('ascii'))
+               asciiSecondLetter = list(lastLetter.encode('ascii'))
+
+               allLetters = range_char(firstLetter, lastLetter)
+               cleanValue = cleanValue.replace(rlObject.group(0), allLetters)
+               #print(cleanValue)
+
+            #IF IT WAS TOLD THEN...
+            convertedValueArray = []
+            index = 0
+
+            for c in cleanValue:
+
+
+                if (c in validOperators or len(cleanValue) - 1 == index or cleanValue[index + 1] in validOperators):
+                    convertedValueArray.append(c)
+                else:
+                    convertedValueArray.append(c)
+                    convertedValueArray.append('|')
+
+                #manual index 
+                index += 1
+
+   
+            convertedValue = ''.join(convertedValueArray)
+
+            if (vocal == 'sign'):
+              print('HERE COMES A NEW')
+              print(vocal, convertedValue)
+
+
+
+
+            listCharactersTokens.append([vocal, convertedValue])
+
+        
+    elif('KEYWORDS' in typeToken):
+
+        for t in tokens:
+
+            vocal, value = t.replace(' ', '').split('=')
+            cleanValue = value.replace('"', '').replace('.', '')
+            reservedWords.append([vocal, cleanValue])
+
+    elif('TOKENS' in typeToken):
+        #we will add to the tokens list and then clean the ones that are not here
+        for t in tokens:
+            if (t != '' and '=' in t):
+                vocal, value = t.replace(' ', '').split('=', 1)
+                cleanValue = value.replace('"', '').replace('.', '').replace('{', '(').replace('}', ')*').replace('[','(').replace(']', ')?')
+
+                cleanValue = replaceWithAlreadyTokens(listCharactersTokens, cleanValue)
+                listRealTokens.append([vocal, cleanValue])
+
+        #now we clean the tokens that are
+
+#some last changes to the real list of tokens
+def getSecondValue(a):
+    
+    return a[1].replace('EXCEPTKEYWORDS', '')
+
+arrayTokensWithoutVocal =  list(map(getSecondValue, listRealTokens ))
+arrayAFNs = list(map(thompson, arrayTokensWithoutVocal))
+theAFN = joinArrayAFNs(arrayAFNs)
+
+#now we will create the file, we will use 
+f = open('program.py', "w")
+
+#default text
+defaultText = """from re import A
+from cocol_functions import getCocolTokens
+from nfa import *
+from dfa import *
+from sub import *
+from thombson import *
+
+#some last changes to the real list of tokens
+def getSecondValue(a):
+    return a[1].replace('EXCEPTKEYWORDS', '')
+
+arrayTokens = {}
+arrayTokensWithoutVocal =  list(map(getSecondValue, arrayTokens ))
+arrayAFNs = list(map(thompson, arrayTokensWithoutVocal))
+theAFN = joinArrayAFNs(arrayAFNs)
+
+reservedWords = {}
+
+flag  = True
+while (flag):
+    userInputs = input('Give me a value :')
+    userInputsArray = userInputs.split(' ')
+    tokens = []
+    for inputU in userInputsArray:
+        isReserved = False
+        for rw in reservedWords:
+            if (rw[1] == inputU):
+                isReserved = True
+            
+        
+        if (isReserved == False):
+            token = compile_nfa(theAFN, inputU)
+            tokens.append(token)
+        else:
+            token = ['RESERVED WORD: ', inputU]
+            tokens.append(token)
+
+    newStringWithTokens = []
+    for token in tokens:
+        if (token[0] == 'RESERVED WORD: '):
+            newStringWithTokens.append('RESERVED WORD '+token[1]+ ',')
+        else:
+            newStringWithTokens.append(arrayTokens[token[1]][0])
+        #print(arrayTokensWithoutVocal[token[1]])
+        
+    print(' '.join(newStringWithTokens))
+
+""".format(listRealTokens,reservedWords)
+
+f.write(defaultText)
+
+
+
+#print(listRealTokens)
+#print(reservedWords)
+#now we will create our afn

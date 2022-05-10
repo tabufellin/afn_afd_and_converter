@@ -1,5 +1,3 @@
-import graphviz
-
 '''
 @possible_ends
 
@@ -15,18 +13,10 @@ it doesnt have any Epsilon value
 
 '''
 def possible_ends(states, sign, trans):
-
-    #declare initial response
     response = []
-
-    for t in trans:
-        transState, transSign, transFinalState  = t[0], t[1], t[2]
-        if (
-            (transState in states) and  
-            (transSign == sign) and 
-            (transFinalState not in response)  
-        ):
-            response.append(transFinalState)
+    for i in trans:
+        if((i[2] not in response) and (i[1] == sign) and (i[0] in states)):
+            response.append(i[2])
     return response
 
 
@@ -38,19 +28,14 @@ is that it will jump between epsilons and give the next
 state that jumps until it stop finding epsilons
 '''
 def e_closure(states, trans):
-
-    #automatically copy the initial state 
-    response = states
-
-    sign = "E"
-
-    for t in trans:
-        transInitialState, transSign = t[0], t[1]
-        if(transSign == sign and transInitialState in response):
-            response2 = possible_ends(t, sign, trans)
-            response = list(set(response + response2))
-
-
+    response = states.copy()
+    added = True
+    while (added):
+        added = False
+        for i in trans:
+            if((i[2] not in response) and (i[1] == "ε") and (i[0] in response)):
+                response.append(i[2])
+                added = True
     return response
 
 
@@ -60,7 +45,7 @@ def graph_machine(df, filename):
 
     f.attr('node', shape='doublecircle')
     for i in df.finals:
-        print(i)
+       
         f.node(i)
 
     f.attr('node', shape='circle')
