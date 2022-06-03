@@ -1,6 +1,6 @@
 def getCocolTokens():
 
-    with open('Archivo2.ATG') as f:
+    with open('Aritmetica.txt') as f:
         lines = f.read().splitlines()
         bigWords = []
         end = 0

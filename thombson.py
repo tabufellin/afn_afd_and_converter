@@ -1,3 +1,4 @@
+from array import array
 from nfa import compile_nfa
 from thombson_m import *
 from af import *
@@ -128,14 +129,3 @@ def joinArrayAFNs (AFNs):
 
     return (af(states= joinedStates, sigma= joinedSigma, trans= joinedAFNtrans, start=[joinedInitialState], finals=joinedFinals))
 
-
-
-
-def getSecondValue(a):
-    return a[1].replace('EXCEPTKEYWORDS', '')
-
-arrayTokens = [['ident', '(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z+(A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z)+(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z))((a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z+(A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z)+(a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z))|(0|1|2|3|4|5|6|7|8|9))*EXCEPTKEYWORDS'], ['hexnumber', '((0|1|2|3|4|5|6|7|8|9)+A|B|C|D|E|F)EXCEPTKEYWORDS']]
-arrayTokensWithoutVocal =  list(map(getSecondValue, arrayTokens ))
-arrayAFNs = list(map(thompson, arrayTokensWithoutVocal))
-theAFN = joinArrayAFNs(arrayAFNs)
-print(compile_nfa(theAFN, 'hola'))

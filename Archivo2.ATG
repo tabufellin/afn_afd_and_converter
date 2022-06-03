@@ -16,6 +16,7 @@ tab = CHR(9).
 eol = CHR(10).
 whitespace = CHR(13)+eol+tab+CHR(13).
 
+
 KEYWORDS
 
 while = "while".
@@ -24,7 +25,9 @@ do = "do".
 TOKENS
 
 ident = letter{letter|digit} EXCEPT KEYWORDS.
-hexnumber = hexdigit EXCEPT KEYWORDS.
+hexnumber = hexdigit{hexdigit}hexterm EXCEPT KEYWORDS.
+number = digit{digit}.
+whitetoken = whitespace{whitespace}
 
 
 END Aritmetica

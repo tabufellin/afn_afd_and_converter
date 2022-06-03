@@ -21,6 +21,12 @@ chrRegex = re.compile(r'(CHR)\(\d{1,3}\)')
 
 rangeLetter =re.compile(r"(\w{1})(.*\..*\..*)((\w{1}))")
 
+sumForm = re.compile(r'(CHR)\(\d{1,3}\)')
+
+def getSecondValue(a):
+    return a[1].replace('EXCEPTKEYWORDS', '')
+
+
 # Character range function
 def range_char(start, stop):
     values=[]
@@ -142,6 +148,23 @@ for token in cocolTokens:
                 cleanValue = value.replace('"', '').replace('.', '').replace('{', '(').replace('}', ')*').replace('[','(').replace(']', ')?')
 
                 cleanValue = replaceWithAlreadyTokens(listCharactersTokens, cleanValue)
+                
+                #if there is sum in there
+                cleanValue = cleanValue.replace('EXCEPTKEYWORDS', '')
+            
+                if ('+' in cleanValue and vocal == 'hexnumber' and cleanValue == None):
+                    newCleanValue = cleanValue.split('+')
+
+                    newCleanValueModified = []
+                    for part in newCleanValue:
+                        partChanged = '(' + part + ')'
+                        newCleanValueModified.append(partChanged)
+
+                    
+                    cleanValue = ''.join(newCleanValueModified)
+            
+           
+
                 listRealTokens.append([vocal, cleanValue])
 
         #now we clean the tokens that are
