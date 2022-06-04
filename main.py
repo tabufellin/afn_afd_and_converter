@@ -188,6 +188,7 @@ from nfa import *
 from dfa import *
 from sub import *
 from thombson import *
+from scanner import *
 
 #some last changes to the real list of tokens
 def getSecondValue(a):
@@ -200,34 +201,13 @@ theAFN = joinArrayAFNs(arrayAFNs)
 
 reservedWords = {}
 
-flag  = True
-while (flag):
-    userInputs = input('Give me a value :')
-    userInputsArray = userInputs.split(' ')
-    tokens = []
-    for inputU in userInputsArray:
-        isReserved = False
-        for rw in reservedWords:
-            if (rw[1] == inputU):
-                isReserved = True
-            
-        
-        if (isReserved == False):
-            token = compile_nfa(theAFN, inputU)
-            tokens.append(token)
-        else:
-            token = ['RESERVED WORD: ', inputU]
-            tokens.append(token)
 
-    newStringWithTokens = []
-    for token in tokens:
-        if (token[0] == 'RESERVED WORD: '):
-            newStringWithTokens.append('RESERVED WORD '+token[1]+ ',')
-        else:
-            newStringWithTokens.append(arrayTokens[token[1]][0])
-        #print(arrayTokensWithoutVocal[token[1]])
-        
-    print(' '.join(newStringWithTokens))
+with open('Archivo.txt') as f:
+    lines = f.read()
+
+    findFirst(lines, [], "", theAFN, reservedWords, arrayTokens)
+    
+    
 
 """.format(listRealTokens,reservedWords)
 

@@ -16,7 +16,7 @@ def compile_nfa(afn, w):
 
     for i in s:
         if i in afn.finals:
-            print(i[-1])
+            #print(i[-1])
             return [True,int(i[-1])]
     return [False, 10000000]
 

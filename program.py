@@ -4,6 +4,7 @@ from nfa import *
 from dfa import *
 from sub import *
 from thombson import *
+from scanner import *
 
 #some last changes to the real list of tokens
 def getSecondValue(a):
@@ -16,37 +17,11 @@ theAFN = joinArrayAFNs(arrayAFNs)
 
 reservedWords = [['while', 'while'], ['do', 'do'], ['if', 'if'], ['switch', 'switch']]
 
-userInputs = ""
-with open('Aritmetica.txt') as f:
-    lines = f.read
-    userInputs = str(lines)
 
-flag  = True
-userInputsArray = userInputs
+with open('Archivo3.ATG') as f:
+    lines = f.read()
 
-tokens = []
-for inputU in userInputsArray:
-    print(inputU)
-    isReserved = False
-    for rw in reservedWords:
-        if (rw[1] == inputU):
-            isReserved = True
-        
+    findFirst(lines, [], "", theAFN, reservedWords, arrayTokens)
     
-    if (isReserved == False):
-        token = compile_nfa(theAFN, inputU)
-        tokens.append(token)
-    else:
-        token = ['RESERVED WORD: ', inputU]
-        tokens.append(token)
-
-newStringWithTokens = []
-for token in tokens:
-    if (token[0] == 'RESERVED WORD: '):
-        newStringWithTokens.append('RESERVED WORD '+token[1]+ ',')
-    else:
-        newStringWithTokens.append(arrayTokens[token[1]][0])
-    #print(arrayTokensWithoutVocal[token[1]])
     
-print(' '.join(newStringWithTokens))
 

@@ -16,7 +16,6 @@ tab = CHR(9).
 eol = CHR(10).
 whitespace = CHR(13)+eol+tab+CHR(13).
 
-
 KEYWORDS
 
 while = "while".
@@ -27,6 +26,7 @@ TOKENS
 ident = letter{letter|digit} EXCEPT KEYWORDS.
 hexnumber = hexdigit{hexdigit}hexterm EXCEPT KEYWORDS.
 number = digit{digit}.
+signnumber = [sign]digit{digit}.
 whitetoken = whitespace{whitespace}
 
 
